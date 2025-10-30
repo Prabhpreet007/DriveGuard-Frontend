@@ -105,10 +105,11 @@ const App = () => {
   };
 
   // Alert sound
-  const playAlertSound = () => {
-    const audio = new Audio('/alert.mp3');
-    audio.play().catch(e => console.log('Audio play failed:', e));
-  };
+// Frontend mein sound play function
+const playAlertSound = () => {
+  const audio = new Audio('/music.wav'); // Public folder mein hona chahiye
+  audio.play().catch(e => console.log('Audio play failed:', e));
+};
 
   // Monitoring start/stop
   const toggleMonitoring = async () => {
