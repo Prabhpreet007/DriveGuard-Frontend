@@ -124,7 +124,7 @@ const playAlertSound = () => {
     if (!isMonitoring) {
       await startCamera();
       setIsMonitoring(true);
-      intervalRef.current = setInterval(captureAndProcessFrame, 50);
+      intervalRef.current = setInterval(captureAndProcessFrame, 20);
     } else {
       stopCamera();
     }
@@ -272,10 +272,10 @@ const playAlertSound = () => {
                 <span className="metric-label">👁️ Eye Aspect Ratio</span>
                 <span className="metric-value">{alertInfo.metrics?.ear || '0.00'}</span>
               </div>
-              <div className="metric-card">
+              {/* <div className="metric-card">
                 <span className="metric-label">😮 Mouth Aspect Ratio</span>
                 <span className="metric-value">{alertInfo.metrics?.mar || '0.00'}</span>
-              </div>
+              </div> */}
               <div className="metric-card">
                 <span className="metric-label">↔️ Head Tilt</span>
                 <span className="metric-value">{alertInfo.metrics?.tilt || '0'}°</span>
