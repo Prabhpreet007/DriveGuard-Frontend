@@ -124,8 +124,7 @@ const playAlertSound = () => {
     if (!isMonitoring) {
       await startCamera();
       setIsMonitoring(true);
-      // Har 200ms mein frame process karo (slower for testing)
-      intervalRef.current = setInterval(captureAndProcessFrame, 200);
+      intervalRef.current = setInterval(captureAndProcessFrame, 50);
     } else {
       stopCamera();
     }
@@ -285,7 +284,6 @@ const playAlertSound = () => {
 
             <div className="frames-info">
               <p>Eye Closed Frames: {alertInfo.metrics?.eye_frames || 0}</p>
-              <p>Yawn Frames: {alertInfo.metrics?.yawn_frames || 0}</p>
               <p>Tilt Frames: {alertInfo.metrics?.tilt_frames || 0}</p>
             </div>
 
@@ -310,7 +308,6 @@ const playAlertSound = () => {
         <h3>🚨 Detection Timing:</h3>
         <ul>
           <li><strong>Drowsiness:</strong> Eyes closed for 3+ seconds</li>
-          <li><strong>Yawning:</strong> Mouth open wide for 2+ seconds</li>
           <li><strong>Head Tilt:</strong> Head tilted for 3+ seconds</li>
         </ul>
 
