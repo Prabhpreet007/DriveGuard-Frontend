@@ -170,7 +170,7 @@ const playAlertSound = () => {
               />
             </div>
 
-            <div className="slider-group">
+            {/* <div className="slider-group">
               <label>Mouth Aspect Ratio: {thresholds.mar_threshold}</label>
               <input
                 type="range"
@@ -180,7 +180,7 @@ const playAlertSound = () => {
                 value={thresholds.mar_threshold}
                 onChange={(e) => setThresholds({...thresholds, mar_threshold: parseFloat(e.target.value)})}
               />
-            </div>
+            </div> */}
 
             <div className="slider-group">
               <label>Head Tilt Threshold: {thresholds.tilt_threshold}°</label>
