@@ -107,8 +107,16 @@ const App = () => {
   // Alert sound
 // Frontend mein sound play function
 const playAlertSound = () => {
-  const audio = new Audio('/music.wav'); // Public folder mein hona chahiye
-  audio.play().catch(e => console.log('Audio play failed:', e));
+  try {
+    const audio = new Audio('/music.wav');
+    audio.play().catch(e => {
+      console.log('Audio play failed:', e);
+      // Yeh line remove karo - playFallbackBeep()
+    });
+  } catch (error) {
+    console.log('Audio error:', error);
+    // Yeh bhi remove karo - playFallbackBeep()
+  }
 };
 
   // Monitoring start/stop
