@@ -17,17 +17,32 @@ const App = () => {
   });
   const [enableSound, setEnableSound] = useState(true);
   const [cameraError, setCameraError] = useState('');
+  const [backendStatus, setBackendStatus] = useState('checking');
 
-  // Backend URL - production mein change hoga
-  const API_BASE = process.env.NODE_ENV === 'production' 
-    ? 'https://driveguard-backend-2.onrender.com/api' 
-    : 'http://localhost:5000';
+  // Backend URL - FIXED
+  const API_BASE = 'https://driveguard-backend-2.onrender.com';
+
+  // Backend health check
+  const checkBackendHealth = async () => {
+    try {
+      const response = await axios.get(`${API_BASE}/api/health`);
+      setBackendStatus('online');
+      console.log('✅ Backend is online:', response.data);
+    } catch (error) {
+      setBackendStatus('offline');
+      console.error('❌ Backend is offline:', error);
+    }
+  };
 
   // Camera start karna
   const startCamera = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { width: 640, height: 480 } 
+        video: { 
+          width: { ideal: 640 },
+          height: { ideal: 480 },
+          frameRate: { ideal: 20 }
+        } 
       });
       streamRef.current = stream;
       videoRef.current.srcObject = stream;
@@ -49,7 +64,7 @@ const App = () => {
     setIsMonitoring(false);
   };
 
-  // Frame capture and process
+  // Frame capture and process - FIXED API CALL
   const captureAndProcessFrame = async () => {
     const video = videoRef.current;
     const canvas = canvasRef.current;
@@ -62,12 +77,16 @@ const App = () => {
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
       const frameData = canvas.toDataURL('image/jpeg', 0.8);
 
+      console.log('📸 Sending frame to backend...');
+
       try {
+        // FIXED: Removed extra /api
         const response = await axios.post(`${API_BASE}/api/process-frame`, {
           frame: frameData,
           thresholds: thresholds
         });
 
+        console.log('✅ Backend response:', response.data);
         setAlertInfo(response.data);
 
         // Alert sound play karna
@@ -75,14 +94,19 @@ const App = () => {
           playAlertSound();
         }
       } catch (error) {
-        console.error('Processing error:', error);
+        console.error('❌ Processing error:', error);
+        console.error('❌ Error details:', error.response?.data);
+        setAlertInfo({
+          status: 'BACKEND ERROR',
+          error: 'Failed to process frame'
+        });
       }
     }
   };
 
   // Alert sound
   const playAlertSound = () => {
-    const audio = new Audio('/alert.mp3'); // Public folder mein alert.mp3 daalna
+    const audio = new Audio('/alert.mp3');
     audio.play().catch(e => console.log('Audio play failed:', e));
   };
 
@@ -91,12 +115,17 @@ const App = () => {
     if (!isMonitoring) {
       await startCamera();
       setIsMonitoring(true);
-      // Har 100ms mein frame process karo
-      intervalRef.current = setInterval(captureAndProcessFrame, 100);
+      // Har 200ms mein frame process karo (slower for testing)
+      intervalRef.current = setInterval(captureAndProcessFrame, 200);
     } else {
       stopCamera();
     }
   };
+
+  // Component mount pe health check
+  useEffect(() => {
+    checkBackendHealth();
+  }, []);
 
   // Component unmount pe cleanup
   useEffect(() => {
@@ -110,6 +139,9 @@ const App = () => {
       <header className="app-header">
         <h1>🚗 DriveGuard - Drowsiness Detection</h1>
         <p>Real-time driver monitoring system</p>
+        <div className={`backend-status ${backendStatus}`}>
+          Backend: {backendStatus === 'online' ? '✅ Online' : '❌ Offline'}
+        </div>
       </header>
 
       <div className="container">
@@ -171,9 +203,16 @@ const App = () => {
             <button 
               className={`monitor-btn ${isMonitoring ? 'stop' : 'start'}`}
               onClick={toggleMonitoring}
+              disabled={backendStatus !== 'online'}
             >
               {isMonitoring ? '🛑 Stop Monitoring' : '🎥 Start Monitoring'}
             </button>
+            
+            {backendStatus !== 'online' && (
+              <div className="warning-message">
+                ⚠️ Backend is offline. Please check backend deployment.
+              </div>
+            )}
           </div>
         </div>
 
@@ -185,6 +224,7 @@ const App = () => {
               ref={videoRef} 
               autoPlay 
               playsInline
+              muted
               className="video-feed"
             />
             <canvas ref={canvasRef} style={{display: 'none'}} />
@@ -198,6 +238,8 @@ const App = () => {
             {!isMonitoring && !cameraError && (
               <div className="placeholder-message">
                 Click "Start Monitoring" to begin detection
+                <br />
+                <small>Backend Status: {backendStatus}</small>
               </div>
             )}
           </div>
@@ -237,6 +279,11 @@ const App = () => {
               <p>Yawn Frames: {alertInfo.metrics?.yawn_frames || 0}</p>
               <p>Tilt Frames: {alertInfo.metrics?.tilt_frames || 0}</p>
             </div>
+
+            {/* Debug Info */}
+            <div className="debug-info">
+              <small>Backend: {backendStatus} | Detector: {alertInfo.detector_type || 'N/A'}</small>
+            </div>
           </div>
         </div>
       </div>
@@ -257,6 +304,13 @@ const App = () => {
           <li><strong>Yawning:</strong> Mouth open wide for 2+ seconds</li>
           <li><strong>Head Tilt:</strong> Head tilted for 3+ seconds</li>
         </ul>
+
+        <div className="debug-section">
+          <h3>🔧 Debug Info:</h3>
+          <p>Backend URL: {API_BASE}</p>
+          <p>Status: {backendStatus}</p>
+          <button onClick={checkBackendHealth}>Re-check Backend</button>
+        </div>
       </div>
     </div>
   );
